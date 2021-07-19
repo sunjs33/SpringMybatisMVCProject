@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="mappers.library.libraryMapper">
+ <sql id="basecolumn">
+ 	BOARD_NUM, USER_ID, BOARD_NAME, BOARD_PASS, BOARD_SUBJECT,
+ 	BOARD_CONTENT, BOARD_DATE, IP_ADDR, READ_COUNT,
+ 	ORIGINAL_FILE_NAME, STORE_FILE_NAME, FILE_SIZE
+ </sql>
+ 	<insert id="libraryInsert" parameterType="lib">
+ 		insert into libraryboard (<include refid="basecolumn"/>)
+ 		values (NUM_SEQ.nextval, #{userId}, #{boardName}, #{boardPass}, #{boardSubject},
+ 		#{boardContent}, sysdate, #{ipAddr}, 0,
+ 		#{originalFileName}, #{storeFileName}, #{fileSize})
+ 	</insert>
+ <resultMap type="lib" id="constructResultMap">
+ 	<constructor>
+ 	<!-- 생성자 순서대로 적어야됨. 생성자로 만들때는 javatype -->
+ 		<idArg column="board_num" javaType="int" />
+ 		<idArg column="user_id" javaType="string" />
+ 		<arg column="board_name" javaType="string"/>
+ 		<arg column="board_pass" javaType="string"/>
+ 		<arg column="board_subject" javaType="string"/>
+ 		<arg column="board_content" javaType="string"/>
+ 		<arg column="board_date" javaType="java.sql.Timestamp"/>
+ 		<arg column="ip_addr" javaType="string"/>
+ 		<arg column="read_count" javaType="int"/>
+ 		<arg column="original_file_name" javaType="string"/>
+ 		<arg column="store_file_name" javaType="string"/>
+ 		<arg column="file_size" javaType="string"/>
+ 	</constructor>
+ 
+ </resultMap>
+ 
+ <resultMap type="lib" id="baseResultMap">
+ 	<id column="board_num" jdbcType="BIGINT" property="boardNum"/>
+ 	<id column="user_id" jdbcType="VARCHAR" property="userId"/>
+ 	<result column="board_name" jdbcType="VARCHAR" property="boardName"/>
+ 	<result column="board_pass" jdbcType="VARCHAR" property="boardPass"/>
+ 	<result column="board_subject" jdbcType="VARCHAR" property="boardSubject"/>
+ 	<result column="board_content" jdbcType="VARCHAR" property="boardContent"/>
+ 	<result column="board_date" jdbcType="TIMESTAMP" property="boardDate"/>
+ 	<result column="ip_addr" jdbcType="VARCHAR" property="ipAddr"/>
+ 	<result column="read_count" jdbcType="BIGINT" property="readCount"/>
+ 	<result column="original_file_name" jdbcType="VARCHAR" property="originalFileName"/>
+ 	<result column="store_file_name" jdbcType="VARCHAR" property="storeFileName"/>
+ 	<result column="file_size" jdbcType="VARCHAR" property="fileSize"/>
+ </resultMap>
+ 
+ <select id="getLibraryList" parameterType="lib" resultMap="baseResultMap">
+ 	select *
+ 	from(select rownum rn, <include refid="basecolumn"/>
+ 		from (select <include refid="basecolumn"/>
+			 	from libraryboard
+				<trim prefix="where" prefixOverrides="AND | OR">
+			 		<if test="boardNum != null">
+			 			board_num=#{boardNum}
+			 		</if>
+			 		<if test="userId != null">
+			 			and user_id=#{userId}
+			 		
+			 		</if>
+			 	</trim>
+		 		order by board_num desc))
+ 	<where>
+ 		<if test="startEndPageDTO != null">
+ 			rn between #{startEndPageDTO.startPage} 
+		   		and #{startEndPageDTO.endPage}
+ 		</if>
+ 	
+ 	</where>
+ 
+ </select>
+ <select id="getLibraryCount" resultType="int">
+ 	select count(*) from libraryboard
+ </select>
+ 
+ <update id="libraryUpdate" parameterType="lib" >
+ 	update libraryboard
+ 	<trim prefix="set" suffixOverrides=","> 
+ 	
+ 		<if test="boardSubject != null">
+ 			board_Subject=#{boardSubject},
+ 		</if>
+ 		<if test="boardContent == null">
+ 			board_content=null,
+ 		</if>
+ 		<if test="boardContent !=null">
+ 			board_content=#{boardContent},
+ 		</if>
+ 		original_File_name=#{originalFileName},
+ 		store_file_name=#{storeFileName},
+ 		file_size=#{fileSize}
+ 		
+ 		
+ 	</trim>
+ 	where board_num=#{boardNum}
+ 
+ </update>
+ 
+ </mapper>
